@@ -399,7 +399,7 @@ export default function Page() {
                 <Button variant="outline" className="flex-shrink-0 relative">
                   <Heart className="h-4 w-4" />
                   {favorites.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-primary text-gray-400 text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-gray-300 text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {favorites.length}
                     </span>
                   )}
