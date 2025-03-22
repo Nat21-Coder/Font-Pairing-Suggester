@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Check, ChevronDown, Copy, Info, Share2, Code, Heart, Trash2 } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Check, ChevronDown, Copy, Info, Share2, Code, Heart, Trash2, ArrowRight, Undo } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 
 import { fontPairings } from "@/lib/font-pairings"
@@ -33,7 +33,7 @@ export function FontPairingSuggester() {
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
-
+  const loadedFontsRef = useRef<Set<string>>(new Set())
   const handleCopyToClipboard = (text: string, message = "Copied to clipboard") => {
     navigator.clipboard.writeText(text)
     toast({
@@ -89,12 +89,12 @@ export function FontPairingSuggester() {
     }
   }, [searchParams])
 
-  // Load fonts
+  // Load fonts only once on initial render and when new fonts need to be loaded
   useEffect(() => {
     // Set loading state
     setFontsLoaded(false)
 
-    // Load all fonts when component mounts
+    // Collect all fonts that need to be loaded
     const fontsToLoad = new Set<string>()
 
     // Add all primary fonts
@@ -112,14 +112,26 @@ export function FontPairingSuggester() {
       fontsToLoad.add(favorite.secondary)
     })
 
-    // Load each font using Google Fonts
+    // Filter out fonts that are already loaded
+    const newFontsToLoad = Array.from(fontsToLoad).filter((font) => !loadedFontsRef.current.has(font))
+
+    if (newFontsToLoad.length === 0) {
+      // If all fonts are already loaded, just set the state
+      setFontsLoaded(true)
+      return
+    }
+
+    // Load each new font using Google Fonts
     const links: HTMLLinkElement[] = []
-    fontsToLoad.forEach((font) => {
+    newFontsToLoad.forEach((font) => {
       const link = document.createElement("link")
       link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s+/g, "+")}&display=swap`
       link.rel = "stylesheet"
       document.head.appendChild(link)
       links.push(link)
+
+      // Add to loaded fonts set
+      loadedFontsRef.current.add(font)
     })
 
     // Set a timeout to assume fonts are loaded after 2 seconds
@@ -135,15 +147,10 @@ export function FontPairingSuggester() {
     })
 
     return () => {
-      // Clean up font links when component unmounts
-      links.forEach((link) => {
-        if (link.parentNode) {
-          link.parentNode.removeChild(link)
-        }
-      })
       clearTimeout(timeoutId)
+      // We don't remove the links since we want to keep the fonts loaded
     }
-  }, [favorites])
+  }, []) // Only run on initial render
 
   // Check if a pairing is in favorites
   const isFavorite = (primary: string, secondary: string) => {
@@ -169,11 +176,26 @@ export function FontPairingSuggester() {
 
   // Remove a pairing from favorites
   const removeFromFavorites = (primary: string, secondary: string) => {
-    setFavorites(favorites.filter((fav) => !(fav.primary === primary && fav.secondary === secondary)))
+    const currentFavorites = [...favorites]
+  
+    // Remove the item
+    const newFavorites = favorites.filter((fav) => !(fav.primary === primary && fav.secondary === secondary))
+    setFavorites(newFavorites)
     toast({
       title: "Removed from favorites",
-      description: `${primary} + ${secondary} has been removed from your favorites`,
-      duration: 3000,
+      description: `${primary} + ${secondary} has been removed`,
+      duration: 5000,
+      action: (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setFavorites(currentFavorites)}
+          className="gap-1"
+        >
+          <Undo className="h-3 w-3" />
+          Undo
+        </Button>
+      ),
     })
   }
 
@@ -359,7 +381,7 @@ export default function Page() {
       <div className="flex flex-col items-center space-y-4">
         <div className="w-full max-w-sm">
           <div className="flex gap-2">
-            <Popover open={open} onOpenChange={setOpen}>
+             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
                   {selectedFont ? selectedFont : "Select a primary font..."}
@@ -382,9 +404,13 @@ export default function Page() {
                             setOpen(false)
                           }}
                         >
-                          <Check
-                            className={cn("mr-2 h-4 w-4", selectedFont === font.primary ? "opacity-100" : "opacity-0")}
-                          />
+                          {selectedFont === font.primary ? (
+                            <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                              <span className="h-2 w-2 rounded-full bg-current" />
+                            </span>
+                          ) : (
+                            <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full border border-primary/20" />
+                          )}
                           {font.primary}
                         </CommandItem>
                       ))}
@@ -432,46 +458,72 @@ export default function Page() {
                             </h3>
                           </div>
                           <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                // Set the selected font and find the pairing
-                                setSelectedFont(favorite.primary)
-                                const fontObj = fontPairings.find((f) => f.primary === favorite.primary)
-                                if (fontObj) {
-                                  const pairingIndex = fontObj.pairings.findIndex(
-                                    (p) => p.secondary === favorite.secondary,
-                                  )
-                                  if (pairingIndex !== -1) {
-                                    setSelectedPairingIndex(pairingIndex)
-                                  }
-                                }
-                                // Close the favorites sheet
-                                setFavoritesOpen(false)
-                              }}
-                            >
-                              <Check className="h-4 w-4" />
-                              <span className="sr-only">Select</span>
-                            </Button>
+                          <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      // Set the selected font and find the pairing
+                                      setSelectedFont(favorite.primary)
+                                      const fontObj = fontPairings.find((f) => f.primary === favorite.primary)
+                                      if (fontObj) {
+                                        const pairingIndex = fontObj.pairings.findIndex(
+                                          (p) => p.secondary === favorite.secondary,
+                                        )
+                                        if (pairingIndex !== -1) {
+                                          setSelectedPairingIndex(pairingIndex)
+                                        }
+                                      }
+                                      // Close the favorites sheet
+                                      setFavoritesOpen(false)
+                                    }}
+                                  >
+                                    <ArrowRight className="h-4 w-4" />
+                                    <span className="sr-only">View pairing</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>View this pairing</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => shareUrl(favorite.primary, favorite.secondary)}
+                                  >
+                                    <Share2 className="h-4 w-4" />
+                                    <span className="sr-only">Share</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Share pairing</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
 
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => shareUrl(favorite.primary, favorite.secondary)}
-                            >
-                              <Share2 className="h-4 w-4" />
-                              <span className="sr-only">Share</span>
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFromFavorites(favorite.primary, favorite.secondary)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Remove</span>
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeFromFavorites(favorite.primary, favorite.secondary)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Remove</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Remove from favorites</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
 
