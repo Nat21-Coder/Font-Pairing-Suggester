@@ -1,194 +1,261 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Check, ChevronDown, Copy, Info, Share2, Code, Heart, Trash2, ArrowRight, Undo } from "lucide-react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Info,
+  Share2,
+  Code,
+  Heart,
+  Trash2,
+  ArrowRight,
+  Undo,
+  X,
+} from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 
-import { fontPairings } from "@/lib/font-pairings"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { fontPairings } from "@/lib/font-pairings";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 // Type for favorite font pairings
 type FavoritePairing = {
-  primary: string
-  secondary: string
-  tags: string[]
-}
+  primary: string;
+  secondary: string;
+  tags: string[];
+};
 
 export function FontPairingSuggester() {
-  const [open, setOpen] = useState(false)
-  const [selectedFont, setSelectedFont] = useState("")
-  const [selectedPairingIndex, setSelectedPairingIndex] = useState<number | null>(null)
-  const { toast } = useToast()
-  const [fontsLoaded, setFontsLoaded] = useState(false)
-  const [codeDialogOpen, setCodeDialogOpen] = useState(false)
-  const [favorites, setFavorites] = useState<FavoritePairing[]>([])
-  const [favoritesOpen, setFavoritesOpen] = useState(false)
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const loadedFontsRef = useRef<Set<string>>(new Set())
-  const handleCopyToClipboard = (text: string, message = "Copied to clipboard") => {
-    navigator.clipboard.writeText(text)
+  const [open, setOpen] = useState(false);
+  const [selectedFont, setSelectedFont] = useState("");
+  const [selectedPairingIndex, setSelectedPairingIndex] = useState<
+    number | null
+  >(null);
+  const { toast } = useToast();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [codeDialogOpen, setCodeDialogOpen] = useState(false);
+  const [favorites, setFavorites] = useState<FavoritePairing[]>([]);
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const loadedFontsRef = useRef<Set<string>>(new Set());
+  const handleCopyToClipboard = (
+    text: string,
+    message = "Copied to clipboard"
+  ) => {
+    navigator.clipboard.writeText(text);
     toast({
       title: "Copied to clipboard",
       description: message,
       duration: 3000,
-    })
-  }
+    });
+  };
 
   const selectedPairings = selectedFont
     ? fontPairings.find((font) => font.primary === selectedFont)?.pairings || []
-    : []
+    : [];
 
-  const selectedPairing = selectedPairingIndex !== null ? selectedPairings[selectedPairingIndex] : null
+  const selectedPairing =
+    selectedPairingIndex !== null
+      ? selectedPairings[selectedPairingIndex]
+      : null;
 
   // Load favorites from localStorage on initial render
   useEffect(() => {
-    const storedFavorites = localStorage.getItem("fontPairingFavorites")
+    const storedFavorites = localStorage.getItem("fontPairingFavorites");
     if (storedFavorites) {
       try {
-        setFavorites(JSON.parse(storedFavorites))
+        setFavorites(JSON.parse(storedFavorites));
       } catch (e) {
-        console.error("Error parsing favorites from localStorage", e)
+        console.error("Error parsing favorites from localStorage", e);
         // If there's an error parsing, start with empty favorites
-        setFavorites([])
+        setFavorites([]);
       }
     }
-  }, [])
+  }, []);
 
   // Save favorites to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("fontPairingFavorites", JSON.stringify(favorites))
-  }, [favorites])
+    localStorage.setItem("fontPairingFavorites", JSON.stringify(favorites));
+  }, [favorites]);
 
   // Parse URL parameters on initial load
   useEffect(() => {
-    const primary = searchParams.get("primary")
-    const secondary = searchParams.get("secondary")
+    const primary = searchParams.get("primary");
+    const secondary = searchParams.get("secondary");
 
     if (primary) {
-      setSelectedFont(primary)
+      setSelectedFont(primary);
 
       if (secondary) {
         // Find the index of the secondary font in the pairings
-        const fontPairingObj = fontPairings.find((font) => font.primary === primary)
+        const fontPairingObj = fontPairings.find(
+          (font) => font.primary === primary
+        );
         if (fontPairingObj) {
-          const pairingIndex = fontPairingObj.pairings.findIndex((pairing) => pairing.secondary === secondary)
+          const pairingIndex = fontPairingObj.pairings.findIndex(
+            (pairing) => pairing.secondary === secondary
+          );
           if (pairingIndex !== -1) {
-            setSelectedPairingIndex(pairingIndex)
+            setSelectedPairingIndex(pairingIndex);
           }
         }
       }
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Load fonts only once on initial render and when new fonts need to be loaded
   useEffect(() => {
     // Set loading state
-    setFontsLoaded(false)
+    setFontsLoaded(false);
 
     // Collect all fonts that need to be loaded
-    const fontsToLoad = new Set<string>()
+    const fontsToLoad = new Set<string>();
 
     // Add all primary fonts
     fontPairings.forEach((font) => {
-      fontsToLoad.add(font.primary)
+      fontsToLoad.add(font.primary);
       // Add all secondary fonts
       font.pairings.forEach((pairing) => {
-        fontsToLoad.add(pairing.secondary)
-      })
-    })
+        fontsToLoad.add(pairing.secondary);
+      });
+    });
 
     // Also load fonts from favorites
     favorites.forEach((favorite) => {
-      fontsToLoad.add(favorite.primary)
-      fontsToLoad.add(favorite.secondary)
-    })
+      fontsToLoad.add(favorite.primary);
+      fontsToLoad.add(favorite.secondary);
+    });
 
     // Filter out fonts that are already loaded
-    const newFontsToLoad = Array.from(fontsToLoad).filter((font) => !loadedFontsRef.current.has(font))
+    const newFontsToLoad = Array.from(fontsToLoad).filter(
+      (font) => !loadedFontsRef.current.has(font)
+    );
 
     if (newFontsToLoad.length === 0) {
       // If all fonts are already loaded, just set the state
-      setFontsLoaded(true)
-      return
+      setFontsLoaded(true);
+      return;
     }
 
     // Load each new font using Google Fonts
-    const links: HTMLLinkElement[] = []
+    const links: HTMLLinkElement[] = [];
     newFontsToLoad.forEach((font) => {
-      const link = document.createElement("link")
-      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s+/g, "+")}&display=swap`
-      link.rel = "stylesheet"
-      document.head.appendChild(link)
-      links.push(link)
+      const link = document.createElement("link");
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(
+        /\s+/g,
+        "+"
+      )}&display=swap`;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+      links.push(link);
 
       // Add to loaded fonts set
-      loadedFontsRef.current.add(font)
-    })
+      loadedFontsRef.current.add(font);
+    });
 
     // Set a timeout to assume fonts are loaded after 2 seconds
     // This is a fallback in case the font loading events don't fire correctly
     const timeoutId = setTimeout(() => {
-      setFontsLoaded(true)
-    }, 2000)
+      setFontsLoaded(true);
+    }, 2000);
 
     // Try to detect when fonts are loaded
     document.fonts.ready.then(() => {
-      clearTimeout(timeoutId)
-      setFontsLoaded(true)
-    })
+      clearTimeout(timeoutId);
+      setFontsLoaded(true);
+    });
 
     return () => {
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
       // We don't remove the links since we want to keep the fonts loaded
-    }
-  }, []) // Only run on initial render
+    };
+  }, []); // Only run on initial render
 
   // Check if a pairing is in favorites
   const isFavorite = (primary: string, secondary: string) => {
-    return favorites.some((fav) => fav.primary === primary && fav.secondary === secondary)
-  }
+    return favorites.some(
+      (fav) => fav.primary === primary && fav.secondary === secondary
+    );
+  };
 
   // Add a pairing to favorites
-  const addToFavorites = (primary: string, secondary: string, tags: string[]) => {
+  const addToFavorites = (
+    primary: string,
+    secondary: string,
+    tags: string[]
+  ) => {
     if (!isFavorite(primary, secondary)) {
       const newFavorite: FavoritePairing = {
         primary,
         secondary,
         tags,
-      }
-      setFavorites([...favorites, newFavorite])
+      };
+      setFavorites([...favorites, newFavorite]);
       toast({
         title: "Added to favorites",
         description: `${primary} + ${secondary} has been added to your favorites`,
         duration: 3000,
-      })
+      });
     }
-  }
+  };
 
   // Remove a pairing from favorites
   const removeFromFavorites = (primary: string, secondary: string) => {
-    const currentFavorites = [...favorites]
-  
+    const currentFavorites = [...favorites];
+
     // Remove the item
-    const newFavorites = favorites.filter((fav) => !(fav.primary === primary && fav.secondary === secondary))
-    setFavorites(newFavorites)
+    const newFavorites = favorites.filter(
+      (fav) => !(fav.primary === primary && fav.secondary === secondary)
+    );
+    setFavorites(newFavorites);
     toast({
       title: "Removed from favorites",
       description: `${primary} + ${secondary} has been removed`,
       duration: 5000,
       action: (
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setFavorites(currentFavorites)}
           className="gap-1"
         >
@@ -196,18 +263,20 @@ export function FontPairingSuggester() {
           Undo
         </Button>
       ),
-    })
-  }
+    });
+  };
 
   // Generate shareable URL
   const generateShareableUrl = (primary: string, secondary: string) => {
-    const baseUrl = window.location.origin + window.location.pathname
-    return `${baseUrl}?primary=${encodeURIComponent(primary)}&secondary=${encodeURIComponent(secondary)}`
-  }
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?primary=${encodeURIComponent(
+      primary
+    )}&secondary=${encodeURIComponent(secondary)}`;
+  };
 
   // Share URL
   const shareUrl = (primary: string, secondary: string) => {
-    const url = generateShareableUrl(primary, secondary)
+    const url = generateShareableUrl(primary, secondary);
 
     if (navigator.share) {
       navigator
@@ -218,21 +287,27 @@ export function FontPairingSuggester() {
         })
         .catch((err) => {
           // Fallback to copying URL
-          handleCopyToClipboard(url, "Shareable link copied to clipboard")
-        })
+          handleCopyToClipboard(url, "Shareable link copied to clipboard");
+        });
     } else {
       // Fallback for browsers that don't support navigator.share
-      handleCopyToClipboard(url, "Shareable link copied to clipboard")
+      handleCopyToClipboard(url, "Shareable link copied to clipboard");
 
       // Update the URL without refreshing the page
-      router.push(url, { scroll: false })
+      router.push(url, { scroll: false });
     }
-  }
+  };
 
   // Generate CSS code
   const generateCssCode = (primary: string, secondary: string) => {
     return `/* Font Import */
-@import url('https://fonts.googleapis.com/css2?family=${primary.replace(/\s+/g, "+")}:wght@400;700&family=${secondary.replace(/\s+/g, "+")}:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=${primary.replace(
+      /\s+/g,
+      "+"
+    )}:wght@400;700&family=${secondary.replace(
+      /\s+/g,
+      "+"
+    )}:wght@400;700&display=swap');
 
 /* Font Variables */
 :root {
@@ -248,8 +323,8 @@ h1, h2, h3, h4, h5, h6 {
 body, p, div, span, li, input, textarea, button {
   font-family: var(--font-secondary);
 }
-`
-  }
+`;
+  };
 
   // Generate HTML snippet
   const generateHtmlSnippet = (primary: string, secondary: string) => {
@@ -261,7 +336,13 @@ body, p, div, span, li, input, textarea, button {
   <title>Font Pairing Example</title>
   
   <!-- Font Import -->
-  <link href="https://fonts.googleapis.com/css2?family=${primary.replace(/\s+/g, "+")}:wght@400;700&family=${secondary.replace(/\s+/g, "+")}:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=${primary.replace(
+    /\s+/g,
+    "+"
+  )}:wght@400;700&family=${secondary.replace(
+      /\s+/g,
+      "+"
+    )}:wght@400;700&display=swap" rel="stylesheet">
   
   <style>
     /* Font Variables */
@@ -310,13 +391,16 @@ body, p, div, span, li, input, textarea, button {
   <h2>Another heading in ${primary}</h2>
   <p>More body text in ${secondary}. The combination creates a balanced visual hierarchy that guides the reader through the content.</p>
 </body>
-</html>`
-  }
+</html>`;
+  };
 
   // Generate React/Next.js snippet
   const generateReactSnippet = (primary: string, secondary: string) => {
     return `// fonts.ts
-import { ${primary.replace(/\s+/g, "_")}, ${secondary.replace(/\s+/g, "_")} } from 'next/font/google'
+import { ${primary.replace(/\s+/g, "_")}, ${secondary.replace(
+      /\s+/g,
+      "_"
+    )} } from 'next/font/google'
 
 export const primaryFont = ${primary.replace(/\s+/g, "_")}({
   subsets: ['latin'],
@@ -373,18 +457,25 @@ export default function Page() {
       <p className="mt-2">This paragraph text uses ${secondary}.</p>
     </div>
   )
-}`
-  }
+}`;
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col items-center space-y-4">
         <div className="w-full max-w-sm">
-          <div className="flex gap-2">
-             <Popover open={open} onOpenChange={setOpen}>
+          <div className="flex sm:flex-row flex-col gap-2">
+            <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-                  {selectedFont ? selectedFont : "Select a primary font..."}
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                >
+                  <span className="truncate">
+                    {selectedFont ? selectedFont : "Select a primary font..."}
+                  </span>
                   <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -399,13 +490,13 @@ export default function Page() {
                           key={font.primary}
                           value={font.primary}
                           onSelect={(currentValue) => {
-                            setSelectedFont(currentValue)
-                            setSelectedPairingIndex(null)
-                            setOpen(false)
+                            setSelectedFont(currentValue);
+                            setSelectedPairingIndex(null);
+                            setOpen(false);
                           }}
                         >
                           {selectedFont === font.primary ? (
-                            <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-gray-600 text-primary-foreground">
                               <span className="h-2 w-2 rounded-full bg-current" />
                             </span>
                           ) : (
@@ -429,13 +520,15 @@ export default function Page() {
                       {favorites.length}
                     </span>
                   )}
-                  <span className="sr-only">Favorites</span>
+                  <span className="sr-only truncate">Favorites</span>
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-md overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Your Favorite Font Pairings</SheetTitle>
-                  <SheetDescription>
+                  <SheetTitle className="truncate">
+                    Your Favorite Font Pairings
+                  </SheetTitle>
+                  <SheetDescription className="truncate">
                     {favorites.length > 0
                       ? "Your saved font combinations for quick access."
                       : "You haven't saved any favorites yet."}
@@ -446,19 +539,25 @@ export default function Page() {
                   {favorites.length === 0 ? (
                     <div className="text-center p-8 border border-dashed rounded-lg">
                       <Heart className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                      <p className="text-gray-500">Click the heart icon on any font pairing to save it here.</p>
+                      <p className="text-gray-500 truncate">
+                        Click the heart icon on any font pairing to save it
+                        here.
+                      </p>
                     </div>
                   ) : (
                     favorites.map((favorite, index) => (
-                      <div key={index} className="border rounded-lg p-4 bg-white">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-medium">
+                      <div
+                        key={index}
+                        className="border rounded-lg p-4 bg-white"
+                      >
+                        <div className="flex flex-col md:flex-row justify-between items-start">
+                          <div className="w-full">
+                            <h3 className="font-medium truncate">
                               {favorite.primary} + {favorite.secondary}
                             </h3>
                           </div>
-                          <div className="flex space-x-2">
-                          <TooltipProvider>
+                          <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-4 px-2">
+                            <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -466,22 +565,28 @@ export default function Page() {
                                     size="icon"
                                     onClick={() => {
                                       // Set the selected font and find the pairing
-                                      setSelectedFont(favorite.primary)
-                                      const fontObj = fontPairings.find((f) => f.primary === favorite.primary)
+                                      setSelectedFont(favorite.primary);
+                                      const fontObj = fontPairings.find(
+                                        (f) => f.primary === favorite.primary
+                                      );
                                       if (fontObj) {
-                                        const pairingIndex = fontObj.pairings.findIndex(
-                                          (p) => p.secondary === favorite.secondary,
-                                        )
+                                        const pairingIndex =
+                                          fontObj.pairings.findIndex(
+                                            (p) =>
+                                              p.secondary === favorite.secondary
+                                          );
                                         if (pairingIndex !== -1) {
-                                          setSelectedPairingIndex(pairingIndex)
+                                          setSelectedPairingIndex(pairingIndex);
                                         }
                                       }
                                       // Close the favorites sheet
-                                      setFavoritesOpen(false)
+                                      setFavoritesOpen(false);
                                     }}
                                   >
                                     <ArrowRight className="h-4 w-4" />
-                                    <span className="sr-only">View pairing</span>
+                                    <span className="sr-only">
+                                      View pairing
+                                    </span>
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -495,7 +600,12 @@ export default function Page() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => shareUrl(favorite.primary, favorite.secondary)}
+                                    onClick={() =>
+                                      shareUrl(
+                                        favorite.primary,
+                                        favorite.secondary
+                                      )
+                                    }
                                   >
                                     <Share2 className="h-4 w-4" />
                                     <span className="sr-only">Share</span>
@@ -513,7 +623,12 @@ export default function Page() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => removeFromFavorites(favorite.primary, favorite.secondary)}
+                                    onClick={() =>
+                                      removeFromFavorites(
+                                        favorite.primary,
+                                        favorite.secondary
+                                      )
+                                    }
                                   >
                                     <Trash2 className="h-4 w-4" />
                                     <span className="sr-only">Remove</span>
@@ -529,28 +644,30 @@ export default function Page() {
 
                         <div className="space-y-2">
                           <p
-                            className="text-xl font-bold"
+                            className="text-xl font-bold truncate"
                             style={{
                               fontFamily: `"${favorite.primary}", system-ui, sans-serif`,
-                              fontDisplay: "swap",
                             }}
                           >
                             Heading in {favorite.primary}
                           </p>
                           <p
-                            className="text-sm"
+                            className="text-sm truncate"
                             style={{
                               fontFamily: `"${favorite.secondary}", system-ui, sans-serif`,
-                              fontDisplay: "swap",
                             }}
                           >
-                            Body text in {favorite.secondary}. This demonstrates how the fonts work together.
+                            Body text in {favorite.secondary}. This demonstrates
+                            how the fonts work together.
                           </p>
                         </div>
 
                         <div className="mt-3 flex flex-wrap gap-1">
                           {favorite.tags.map((tag, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full"
+                            >
                               {tag}
                             </span>
                           ))}
@@ -567,8 +684,9 @@ export default function Page() {
 
       {selectedFont && (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-center">
-            Complementary fonts for <span className="text-gray-400">{selectedFont}</span>
+          <h2 className="text-md sm:text-xl truncate font-semibold text-center">
+            Complementary fonts for{" "}
+            <span className="text-gray-400">{selectedFont}</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -577,16 +695,22 @@ export default function Page() {
                 key={index}
                 className={cn(
                   "border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow",
-                  selectedPairingIndex === index && "ring-2 ring-primary",
+                  selectedPairingIndex === index && "ring-2 ring-primary"
                 )}
               >
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-medium">{pairing.secondary}</h3>
-                      <p className="text-sm text-gray-500">with {selectedFont}</p>
+                <div className="flex flex-col px-2 py-6">
+                  <div className="flex flex-col md:flex-row justify-between items-start">
+                    <div className="flex flex-col w-full">
+                      {/* HERE TRUNCATE DOEN'T WORK */}
+                      <h3 className="text-lg font-medium truncate">
+                        {pairing.secondary}
+                      </h3>
+                      {/* HERE TRUNCATE DOESN"T WORK */}
+                      <p className="text-sm text-gray-500 truncate">
+                        with {selectedFont}
+                      </p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-4 px-2">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -594,20 +718,33 @@ export default function Page() {
                               variant="ghost"
                               size="icon"
                               className={
-                                isFavorite(selectedFont, pairing.secondary) ? "text-red-500 hover:text-red-600" : ""
+                                isFavorite(selectedFont, pairing.secondary)
+                                  ? "text-red-500 hover:text-red-600"
+                                  : ""
                               }
                               onClick={() => {
-                                if (isFavorite(selectedFont, pairing.secondary)) {
-                                  removeFromFavorites(selectedFont, pairing.secondary)
+                                if (
+                                  isFavorite(selectedFont, pairing.secondary)
+                                ) {
+                                  removeFromFavorites(
+                                    selectedFont,
+                                    pairing.secondary
+                                  );
                                 } else {
-                                  addToFavorites(selectedFont, pairing.secondary, pairing.tags)
+                                  addToFavorites(
+                                    selectedFont,
+                                    pairing.secondary,
+                                    pairing.tags
+                                  );
                                 }
                               }}
                             >
                               <Heart
                                 className={cn(
                                   "h-4 w-4",
-                                  isFavorite(selectedFont, pairing.secondary) ? "fill-red-500" : "",
+                                  isFavorite(selectedFont, pairing.secondary)
+                                    ? "fill-red-500"
+                                    : ""
                                 )}
                               />
                               <span className="sr-only">
@@ -634,8 +771,8 @@ export default function Page() {
                               variant="ghost"
                               size="icon"
                               onClick={() => {
-                                setSelectedPairingIndex(index)
-                                setCodeDialogOpen(true)
+                                setSelectedPairingIndex(index);
+                                setCodeDialogOpen(true);
                               }}
                             >
                               <Code className="h-4 w-4" />
@@ -655,8 +792,8 @@ export default function Page() {
                               variant="ghost"
                               size="icon"
                               onClick={() => {
-                                setSelectedPairingIndex(index)
-                                shareUrl(selectedFont, pairing.secondary)
+                                setSelectedPairingIndex(index);
+                                shareUrl(selectedFont, pairing.secondary);
                               }}
                             >
                               <Share2 className="h-4 w-4" />
@@ -699,28 +836,37 @@ export default function Page() {
                     <div className="space-y-2">
                       {!fontsLoaded && (
                         <div className="h-20 flex items-center justify-center">
-                          <div className="animate-pulse text-gray-400">Loading fonts...</div>
+                          <div className="animate-pulse text-gray-400 truncate">
+                            Loading fonts...
+                          </div>
                         </div>
                       )}
-                      <div className={!fontsLoaded ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>
+                      <div
+                        className={
+                          !fontsLoaded
+                            ? "opacity-0"
+                            : "opacity-100 transition-opacity duration-300"
+                        }
+                      >
+                        {/* HERE TRUNCATE WORK */}
                         <p
-                          className="text-2xl font-bold"
+                          className="text-md sm:text-2xl truncate font-bold"
                           style={{
                             fontFamily: `"${selectedFont}", system-ui, sans-serif`,
-                            fontDisplay: "swap",
                           }}
                         >
                           Heading in {selectedFont}
                         </p>
+                        {/* HERE TRUNCATE WORKS */}
                         <p
-                          className="text-base"
+                          className="text-base truncate"
                           style={{
                             fontFamily: `"${pairing.secondary}", system-ui, sans-serif`,
-                            fontDisplay: "swap",
                           }}
                         >
-                          Body text in {pairing.secondary}. This demonstrates how the fonts work together in a typical
-                          layout with headings and body text.
+                          Body text in {pairing.secondary}. This demonstrates
+                          how the fonts work together in a typical layout with
+                          headings and body text.
                         </p>
                       </div>
                     </div>
@@ -728,7 +874,10 @@ export default function Page() {
                     <div className="pt-4 border-t">
                       <div className="flex flex-wrap gap-2">
                         {pairing.tags.map((tag, i) => (
-                          <span key={i} className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
+                          <span
+                            key={i}
+                            className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full truncate"
+                          >
                             {tag}
                           </span>
                         ))}
@@ -744,59 +893,77 @@ export default function Page() {
 
       {!selectedFont && (
         <div className="text-center p-12 border border-dashed rounded-lg bg-gray-50">
-          <p className="text-gray-500">Select a primary font to see complementary pairings</p>
+          <p className="text-gray-500 truncate">
+            Select a primary font to see complementary pairings
+          </p>
         </div>
       )}
 
       {/* Code Dialog */}
       <Dialog open={codeDialogOpen} onOpenChange={setCodeDialogOpen}>
-        <DialogContent className="w-full">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedFont && selectedPairing ? (
-                <>
-                  Implementation Code for {selectedFont} + {selectedPairing.secondary}
-                </>
-              ) : (
-                "Font Pairing Code"
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              Copy the code snippets below to implement this font pairing in your project.
-            </DialogDescription>
+        <DialogContent>
+          <DialogHeader className="flex justify-between items-start">
+            <div className="flex flex-col gap-2">
+              <DialogTitle className="truncate max-w-[90vw]">
+                {selectedFont && selectedPairing ? (
+                  <>
+                    Implementation Code for {selectedFont} +{" "}
+                    {selectedPairing.secondary}
+                  </>
+                ) : (
+                  "Font Pairing Code"
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                Copy the code snippets below to implement this font pairing in
+                your project.
+              </DialogDescription>
+            </div>
+
+           
           </DialogHeader>
 
           {selectedFont && selectedPairing && (
-            <Tabs defaultValue="css" className="mt-4 max-h-[80vh] overflow-y-auto">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="css">CSS</TabsTrigger>
-                <TabsTrigger value="html">HTML</TabsTrigger>
-                <TabsTrigger value="react">React/Next.js</TabsTrigger>
-              </TabsList>
+            <Tabs className="mt-4 max-h-[80vh] overflow-y-auto flex flex-col gap-10 px-4">
+              <div className="flex w-full flex-col gap-2 ">
+                <TabsList>
+                  <TabsTrigger value="css">CSS</TabsTrigger>
+                </TabsList>
+                <TabsList>
+                  <TabsTrigger value="html">HTML</TabsTrigger>
+                </TabsList>
+                <TabsList>
+                  <TabsTrigger value="react">React/Next.js</TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="css" className="mt-4 space-y-4">
                 <div className="relative">
                   <pre className="p-4 rounded-md bg-gray-100 text-sm  overflow-auto w-full md:max-w-[40vw] max-h-[50vh]">
-                    <code>{generateCssCode(selectedFont, selectedPairing.secondary)}</code>
+                    <code>
+                      {generateCssCode(selectedFont, selectedPairing.secondary)}
+                    </code>
                   </pre>
                   <Button
                     size="sm"
                     className="absolute top-2 right-2 bg-gray-600 hover:bg-gray-400"
                     onClick={() =>
                       handleCopyToClipboard(
-                        generateCssCode(selectedFont, selectedPairing.secondary),
-                        "CSS code copied to clipboard",
+                        generateCssCode(
+                          selectedFont,
+                          selectedPairing.secondary
+                        ),
+                        "CSS code copied to clipboard"
                       )
                     }
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                   
                   </Button>
                 </div>
-                <div className="text-sm text-gray-500">
-                  <p>
-                    This CSS imports both fonts from Google Fonts and sets up CSS variables for consistent usage
-                    throughout your project.
+                <div className="text-sm text-gray-500 ">
+                  <p className="truncate">
+                    This CSS imports both fonts from Google Fonts and sets up
+                    CSS variables for consistent usage throughout your project.
                   </p>
                 </div>
               </TabsContent>
@@ -804,25 +971,33 @@ export default function Page() {
               <TabsContent value="html" className="mt-4 space-y-4">
                 <div className="relative">
                   <pre className="p-4 rounded-md bg-gray-100 text-sm overflow-auto w-full md:max-w-3xl  max-h-[50vh]">
-                    <code >{generateHtmlSnippet(selectedFont, selectedPairing.secondary)}</code>
+                    <code>
+                      {generateHtmlSnippet(
+                        selectedFont,
+                        selectedPairing.secondary
+                      )}
+                    </code>
                   </pre>
                   <Button
                     size="sm"
                     className="absolute top-2 right-2 bg-gray-600 hover:bg-gray-400"
                     onClick={() =>
                       handleCopyToClipboard(
-                        generateHtmlSnippet(selectedFont, selectedPairing.secondary),
-                        "HTML snippet copied to clipboard",
+                        generateHtmlSnippet(
+                          selectedFont,
+                          selectedPairing.secondary
+                        ),
+                        "HTML snippet copied to clipboard"
                       )
                     }
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    
                   </Button>
                 </div>
                 <div className="text-sm text-gray-500">
-                  <p>
-                    This HTML snippet includes everything you need to implement the font pairing in a simple HTML page.
+                  <p className="truncate">
+                    This HTML snippet includes everything you need to implement
+                    the font pairing in a simple HTML page.
                   </p>
                 </div>
               </TabsContent>
@@ -830,35 +1005,40 @@ export default function Page() {
               <TabsContent value="react" className="mt-4 space-y-4">
                 <div className="relative">
                   <pre className="p-4 rounded-md bg-gray-100 text-sm overflow-auto max-w-3xl max-h-[50vh]">
-                    <code >{generateReactSnippet(selectedFont, selectedPairing.secondary)}</code>
+                    <code>
+                      {generateReactSnippet(
+                        selectedFont,
+                        selectedPairing.secondary
+                      )}
+                    </code>
                   </pre>
                   <Button
                     size="sm"
-                    className="absolute top-2 right-2 bg-gray-600 hover:bg-gray-400"
+                    className="absolute top-2 right-2 bg-gray-600 hover:bg-gray-400 "
                     onClick={() =>
                       handleCopyToClipboard(
-                        generateReactSnippet(selectedFont, selectedPairing.secondary),
-                        "React code copied to clipboard",
+                        generateReactSnippet(
+                          selectedFont,
+                          selectedPairing.secondary
+                        ),
+                        "React code copied to clipboard"
                       )
                     }
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                   
                   </Button>
                 </div>
                 <div className="text-sm text-gray-500">
-                  <p>
-                    This React/Next.js implementation uses the Next.js font system for optimal performance and font
-                    loading.
+                  <p className="truncate">
+                    This React/Next.js implementation uses the Next.js font
+                    system for optimal performance and font loading.
                   </p>
                 </div>
               </TabsContent>
-
             </Tabs>
           )}
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
