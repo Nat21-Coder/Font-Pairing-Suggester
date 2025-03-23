@@ -28,7 +28,7 @@ interface FavoriteListProps{
     setSelectedFont:Dispatch<SetStateAction<string>>;
     setSelectedPairingIndex:Dispatch<SetStateAction<number|null>>;
 }
-const FavoriteList = ({
+const FavoritesList = ({
   favoritesOpen,
   fontPairings,
   setFavorites,
@@ -231,4 +231,4 @@ const FavoriteList = ({
 };
 
 
-export default FavoriteList;
+export default FavoritesList;

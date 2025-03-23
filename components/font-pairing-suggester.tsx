@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import CodeDialog from "./code-dialog";
 import { FavoritePairing, Paring } from "@/types";
-import FavoriteList from "./favorites-list";
+import FavoritesList from "./favorites-list";
 import FontPairingCard from "./font-paring-card";
 
 export function FontPairingSuggester() {
@@ -215,7 +215,7 @@ export function FontPairingSuggester() {
             </Popover>
 
             {/*  */}
-            <FavoriteList
+            <FavoritesList
               favoritesOpen={favoritesOpen}
               fontPairings={fontPairings}
               setFavorites={setFavorites}
