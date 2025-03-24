@@ -70,6 +70,7 @@ const FavoritesList = ({
       <SheetTrigger asChild>
         <Button variant="outline" className="flex-shrink-0 relative">
           <Heart className="h-4 w-4" />
+          <span className="block sm:hidden">Show Favorites</span>
           {favorites.length > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-500 text-gray-300 text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {favorites.length}
@@ -101,13 +102,13 @@ const FavoritesList = ({
           ) : (
             favorites.map((favorite, index) => (
               <div key={index} className="border rounded-lg p-4 bg-white ">
-                <div className="flex justify-between items-start px-4 ">
-                  <div className="w-full">
+                <div className="flex justify-between items-start flex-wrap gap-4">
+                  <div>
                     <h3 className="font-medium truncate">
                       {favorite.primary} + {favorite.secondary}
                     </h3>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex justify-end gap-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>

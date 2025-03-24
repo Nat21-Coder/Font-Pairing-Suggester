@@ -16,12 +16,12 @@ import {
   handleCopyToClipboard,
 } from "@/lib/functions";
 import { Dispatch, SetStateAction } from "react";
-import { Paring } from "@/types";
+import { Pairing } from "@/types";
 interface CodeDialogProps{
 codeDialogOpen:boolean;
   setCodeDialogOpen:Dispatch<SetStateAction<boolean>>;
   selectedFont:string
-  selectedPairing:Paring|null;
+  selectedPairing:Pairing|null;
 }
 const CodeDialog = ({
   codeDialogOpen,

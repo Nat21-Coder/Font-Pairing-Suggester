@@ -89,13 +89,13 @@ const FontPairingCard = ({
     };
   return (
     <div className="flex flex-col px-4 py-6">
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col w-full">
+      <div className="flex justify-between items-start flex-wrap gap-4">
+        <div className="flex flex-col">
           <h3 className="text-lg font-medium truncate">{pairing.secondary}</h3>
 
           <p className="text-sm text-gray-500 truncate">with {selectedFont}</p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex justify-end gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
