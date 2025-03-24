@@ -1,4 +1,4 @@
-export interface Paring{
+export interface Pairing{
     secondary:string;
     reason:string;
     tags:string[];
@@ -8,7 +8,7 @@ export interface FavoritePairing {
   secondary: string;
   tags: string[];
 };
-export interface FontParing{
+export interface FontPairing{
     primary:string;
-    pairings:Paring[]
+    pairings:Pairing[]
 }

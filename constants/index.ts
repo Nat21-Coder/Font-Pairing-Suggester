@@ -1,11 +1,4 @@
-export type FontPairing = {
-  primary: string
-  pairings: {
-    secondary: string
-    reason: string
-    tags: string[]
-  }[]
-}
+import { FontPairing } from "@/types";
 
 export const fontPairings: FontPairing[] = [
   {

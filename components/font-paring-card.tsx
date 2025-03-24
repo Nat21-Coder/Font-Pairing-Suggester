@@ -9,12 +9,12 @@ import {
 import { shareUrl } from "@/lib/functions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { FavoritePairing, Paring } from "@/types";
+import { FavoritePairing, Pairing,  } from "@/types";
 import { Dispatch, SetStateAction } from "react";
 import { cn } from "@/lib/utils";
 interface FontParingCardProps {
   favorites: FavoritePairing[];
-  pairing: Paring;
+  pairing: Pairing;
   fontsLoaded: any;
   selectedFont: any;
   index:number,
@@ -88,14 +88,14 @@ const FontPairingCard = ({
       );
     };
   return (
-    <div className="flex flex-col px-2 py-6">
-      <div className="flex flex-col md:flex-row justify-between items-start">
+    <div className="flex flex-col px-4 py-6">
+      <div className="flex justify-between items-start">
         <div className="flex flex-col w-full">
           <h3 className="text-lg font-medium truncate">{pairing.secondary}</h3>
 
           <p className="text-sm text-gray-500 truncate">with {selectedFont}</p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-4 px-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

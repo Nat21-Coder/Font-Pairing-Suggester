@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, SetStateAction } from "react";
-import { ChevronDown, Info, Share2, Code, Heart, Undo } from "lucide-react";
+import { useState, useEffect, useRef} from "react";
+import { ChevronDown} from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-import { fontPairings } from "@/lib/font-pairings";
+import { fontPairings } from "@/constants/";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,11 +24,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 import CodeDialog from "./code-dialog";
-import { FavoritePairing, Paring } from "@/types";
+import { FavoritePairing, Pairing,  } from "@/types";
 import FavoritesList from "./favorites-list";
 import FontPairingCard from "./font-paring-card";
 
-export function FontPairingSuggester() {
+const FontPairingSuggester = ()=>{
   const [open, setOpen] = useState(false);
   const [selectedFont, setSelectedFont] = useState("");
   const [selectedPairingIndex, setSelectedPairingIndex] = useState<
@@ -47,7 +47,7 @@ export function FontPairingSuggester() {
     ? fontPairings.find((font) => font.primary === selectedFont)?.pairings || []
     : [];
 
-  const selectedPairing: Paring | null =
+  const selectedPairing: Pairing | null =
     selectedPairingIndex !== null
       ? selectedPairings[selectedPairingIndex]
       : null;
@@ -240,8 +240,8 @@ export function FontPairingSuggester() {
               <div
                 key={index}
                 className={cn(
-                  "border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow",
-                  selectedPairingIndex === index && "ring-2 ring-primary"
+                  "border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow p-4",
+                  selectedPairingIndex === index && "ring ring-gray-300"
                 )}
               >
                 {/* font paring card*/}
@@ -279,3 +279,5 @@ export function FontPairingSuggester() {
     </div>
   );
 }
+
+export default FontPairingSuggester;

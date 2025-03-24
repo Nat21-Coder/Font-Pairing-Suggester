@@ -1,4 +1,4 @@
-import { FontPairingSuggester } from "@/components/font-pairing-suggester"
+import FontPairingSuggester from "@/components/font-pairing-suggester";
 
 export default function Home() {
   return (

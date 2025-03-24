@@ -17,11 +17,11 @@ import {
 } from "./ui/tooltip";
 import { shareUrl } from "@/lib/functions";
 import { useToast } from "@/hooks/use-toast";
-import { FavoritePairing, FontParing } from "@/types";
+import { FavoritePairing, FontPairing } from "@/types";
 import { useRouter } from "next/navigation";
 interface FavoriteListProps{
     favoritesOpen:boolean
-    fontPairings:FontParing[];
+    fontPairings:FontPairing[];
     setFavorites:Dispatch<SetStateAction<FavoritePairing[]>>
     setFavoritesOpen:Dispatch<SetStateAction<boolean>>
     favorites:FavoritePairing[];
@@ -100,14 +100,14 @@ const FavoritesList = ({
             </div>
           ) : (
             favorites.map((favorite, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-white">
-                <div className="flex flex-col md:flex-row justify-between items-start">
+              <div key={index} className="border rounded-lg p-4 bg-white ">
+                <div className="flex justify-between items-start px-4 ">
                   <div className="w-full">
                     <h3 className="font-medium truncate">
                       {favorite.primary} + {favorite.secondary}
                     </h3>
                   </div>
-                  <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-4 px-2">
+                  <div className="flex flex-wrap gap-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -215,7 +215,7 @@ const FavoritesList = ({
                   {favorite.tags.map((tag, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full"
+                      className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full truncate"
                     >
                       {tag}
                     </span>
